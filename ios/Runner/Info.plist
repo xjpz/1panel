@@ -33,8 +33,6 @@
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 	</dict>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Access 1Panel services and website resources on your local network.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_bonjour._tcp</string>
@@ -42,6 +40,8 @@
 	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to unlock Mono Dash.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Access 1Panel services and website resources on your local network.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Select photos or files from your library to upload to a 1Panel panel.</string>
 	<key>NSSupportsLiveActivities</key>

@@ -47,8 +47,12 @@ class _PremiumPurchasePageState extends ConsumerState<PremiumPurchasePage> {
     final serverCount =
         ref.watch(serversNotifierProvider).valueOrNull?.length ?? 0;
     final purchaseState = purchaseAsync.valueOrNull;
-    final isUnlocked = purchaseState?.isUnlocked ?? false;
-    final purchaseError = _purchaseError(purchaseAsync, purchaseState);
+    final isUnlocked =
+        RevenueCatConfig.bypassServerLimitCheck ||
+        (purchaseState?.isUnlocked ?? false);
+    final purchaseError = RevenueCatConfig.bypassServerLimitCheck
+        ? null
+        : _purchaseError(purchaseAsync, purchaseState);
 
     return FrostedScaffold(
       title: 'Mono Dash',

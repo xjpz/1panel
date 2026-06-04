@@ -23,7 +23,7 @@ class RevenueCatConfig {
   static const entitlementId = 'Mono Dash Unlimited';
   static const offeringId = 'default';
   static const freeServerLimit = 1;
-  static const bypassServerLimitCheck = false;
+  static const bypassServerLimitCheck = true;
 
   static String? get apiKey {
     if (kIsWeb) return webApiKey.isEmpty ? null : webApiKey;

@@ -2,15 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
+	<string>$(TeamIdentifierPrefix)cc.xjpz.monodash</string>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.cc.boring-lab.monodash</string>
+		<string>group.cc.xjpz.monodash</string>
 	</array>
-	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
-	<string>$(TeamIdentifierPrefix)cc.boring-lab.monodash</string>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)cc.boring-lab.monodash.widget</string>
+		<string>$(AppIdentifierPrefix)cc.xjpz.monodash.widget</string>
 	</array>
 </dict>
 </plist>
