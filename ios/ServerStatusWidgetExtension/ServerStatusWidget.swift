@@ -5,8 +5,8 @@ import Security
 import SwiftUI
 import WidgetKit
 
-private let appGroupId = "group.cc.boring-lab.monodash"
-private let keychainAccessGroup = "53R8Z6YBWK.cc.boring-lab.monodash.widget"
+private let appGroupId = "group.cc.xjpz.monodash"
+private let keychainAccessGroup = "AGQDQFK98K.cc.xjpz.monodash.widget"
 private let keychainService = "MonoDashServerWidget"
 private let serversKey = "server_widget_servers"
 private let snapshotsKey = "server_widget_snapshots"

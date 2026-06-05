@@ -4,8 +4,8 @@ import Security
 import WidgetKit
 
 final class ServerWidgetBridge {
-  private static let appGroupId = "group.cc.boring-lab.monodash"
-  private static let keychainAccessGroup = "53R8Z6YBWK.cc.boring-lab.monodash.widget"
+  private static let appGroupId = "group.cc.xjpz.monodash"
+  private static let keychainAccessGroup = "AGQDQFK98K.cc.xjpz.monodash.widget"
   private static let keychainService = "MonoDashServerWidget"
   private static let channelName = "mono_dash/server_widget"
   private static let serversKey = "server_widget_servers"

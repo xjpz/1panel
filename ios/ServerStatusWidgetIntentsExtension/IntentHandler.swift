@@ -1,6 +1,6 @@
 import Intents
 
-private let appGroupId = "group.cc.boring-lab.monodash"
+private let appGroupId = "group.cc.xjpz.monodash"
 private let serversKey = "server_widget_servers"
 
 final class IntentHandler: INExtension, SelectServerIntentHandling, SelectServerOverviewIntentHandling {
