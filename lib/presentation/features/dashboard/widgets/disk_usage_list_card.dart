@@ -109,7 +109,15 @@ class _DiskUsageLine extends StatelessWidget {
                 if (loading)
                   const SkeletonItem(width: double.infinity, height: 8)
                 else
-                  DashboardLinearMeter(percent: percent, color: color),
+                  Stack(
+                    children: [
+                      DashboardLinearMeter(
+                        percent: 100,
+                        color: AppColors.separator(context).withValues(alpha: 0.05),
+                      ),
+                      DashboardLinearMeter(percent: percent, color: color),
+                    ],
+                  ),
                 const SizedBox(height: 8),
                 if (loading)
                   const SkeletonItem.text(width: 120, height: 12)

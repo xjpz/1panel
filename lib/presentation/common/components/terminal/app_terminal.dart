@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:crypto/crypto.dart';
 
 import 'package:flutter/cupertino.dart';
@@ -17,8 +18,9 @@ import '../../../../core/network/web_socket_connector.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/storage/storage_service.dart';
 import '../frosted_header.dart';
-import '../frosted_overlay_menu.dart';
 import '../../../features/server_detail/providers/active_server_provider.dart';
+import '../../../../core/router/app_router.dart';
+import 'floating_terminal_controller.dart';
 
 Future<void> showAppTerminal(
   BuildContext context, {
@@ -47,6 +49,39 @@ Future<void> showAppTerminal(
   );
 }
 
+/// 从悬浮状态恢复终端界面。
+Future<void> restoreAppTerminal(
+  BuildContext context,
+  FloatingTerminalState floatingState,
+) {
+  final container = ProviderScope.containerOf(context);
+  final route = CupertinoPageRoute(
+    builder: (context) => UncontrolledProviderScope(
+      container: container,
+      child: ProviderScope(
+        overrides: [
+          activeServerIdProvider.overrideWithValue(floatingState.serverId),
+        ],
+        child: _AppTerminalScreen(
+          containerId: floatingState.containerId,
+          user: floatingState.user,
+          command: floatingState.command,
+          source: floatingState.source,
+          databaseType: floatingState.databaseType,
+          databaseName: floatingState.databaseName,
+          floatingState: floatingState,
+        ),
+      ),
+    ),
+  );
+
+  final navigator = rootNavigatorKey.currentState;
+  if (navigator != null) {
+    return navigator.push(route);
+  }
+  return Navigator.of(context).push(route);
+}
+
 class _AppTerminalScreen extends ConsumerStatefulWidget {
   const _AppTerminalScreen({
     required this.containerId,
@@ -55,6 +90,7 @@ class _AppTerminalScreen extends ConsumerStatefulWidget {
     required this.source,
     this.databaseType,
     this.databaseName,
+    this.floatingState,
   });
 
   final String containerId;
@@ -64,24 +100,41 @@ class _AppTerminalScreen extends ConsumerStatefulWidget {
   final String? databaseType;
   final String? databaseName;
 
+  /// 非 null 时表示从悬浮状态恢复，使用已有的 terminal/channel。
+  final FloatingTerminalState? floatingState;
+
   @override
   ConsumerState<_AppTerminalScreen> createState() => _AppTerminalScreenState();
 }
 
 class _AppTerminalScreenState extends ConsumerState<_AppTerminalScreen> {
   late final Terminal _terminal;
-  final TerminalController _terminalController = TerminalController();
+  late final TerminalController _terminalController;
   final FocusNode _terminalFocusNode = FocusNode();
   WebSocketChannel? _channel;
   StreamSubscription? _subscription;
   bool _isConnected = false;
   String _statusMessage = '';
+  bool _floated = false;
 
   @override
   void initState() {
     super.initState();
-    _terminal = Terminal(maxLines: 10000);
-    _connect();
+    final fs = widget.floatingState;
+    if (fs != null) {
+      // 从悬浮状态恢复
+      _terminal = fs.terminal;
+      _terminalController = fs.terminalController;
+      _channel = fs.channel;
+      _subscription = fs.subscription;
+      _isConnected = fs.isConnected;
+      _statusMessage = fs.statusMessage;
+    } else {
+      // 正常创建新连接
+      _terminal = Terminal(maxLines: 10000);
+      _terminalController = TerminalController();
+      _connect();
+    }
   }
 
   Future<void> _connect() async {
@@ -226,11 +279,44 @@ class _AppTerminalScreenState extends ConsumerState<_AppTerminalScreen> {
 
   @override
   void dispose() {
-    _subscription?.cancel();
-    _channel?.sink.close();
-    _terminalController.dispose();
+    if (!_floated) {
+      _subscription?.cancel();
+      _channel?.sink.close();
+      _terminalController.dispose();
+    }
     _terminalFocusNode.dispose();
     super.dispose();
+  }
+
+  void _floatTerminal() {
+    final title = widget.source == 'host'
+        ? context.l10n.terminal_hostTitle
+        : widget.source == 'database'
+        ? context.l10n.terminal_databaseTitle(widget.databaseName ?? '')
+        : context.l10n.terminal_containerTitle(widget.containerId);
+
+    final state = FloatingTerminalState(
+      id: widget.floatingState?.id,
+      bubbleSnapshot: widget.floatingState?.bubbleSnapshot,
+      terminal: _terminal,
+      terminalController: _terminalController,
+      channel: _channel,
+      subscription: _subscription,
+      isConnected: _isConnected,
+      statusMessage: _statusMessage,
+      title: title,
+      containerId: widget.containerId,
+      user: widget.user,
+      command: widget.command,
+      source: widget.source,
+      databaseType: widget.databaseType,
+      databaseName: widget.databaseName,
+      serverId: ref.read(activeServerIdProvider),
+    );
+
+    ref.read(floatingTerminalProvider).floatTerminal(state);
+    _floated = true;
+    Navigator.of(context).pop();
   }
 
   Future<void> _copySelectionOrAll() async {
@@ -341,6 +427,7 @@ class _AppTerminalScreenState extends ConsumerState<_AppTerminalScreen> {
                 _TerminalShortcutToolbar(
                   enabled: _isConnected,
                   onKey: _sendTerminalKey,
+                  onCopy: _copySelectionOrAll,
                   onPaste: _pasteFromClipboard,
                 ),
               ],
@@ -360,24 +447,10 @@ class _AppTerminalScreenState extends ConsumerState<_AppTerminalScreen> {
                   : context.l10n.terminal_containerTitle(widget.containerId),
               onBack: () => Navigator.of(context).maybePop(),
               trailingBuilder: (isDark, isOverlapping) =>
-                  FrostedOverlayMenuButton(
-                    label: _isConnected
-                        ? context.l10n.common_menu
-                        : context.l10n.terminal_connecting,
+                  _FrostedFloatButton(
+                    onTap: _floatTerminal,
                     isDark: isDark,
                     isOverlapping: isOverlapping,
-                    items: [
-                      FrostedMenuItem(
-                        text: context.l10n.terminal_copySelection,
-                        icon: CupertinoIcons.doc_on_doc,
-                        action: _copySelectionOrAll,
-                      ),
-                      FrostedMenuItem(
-                        text: context.l10n.terminal_pasteToTerminal,
-                        icon: CupertinoIcons.doc_on_clipboard,
-                        action: _pasteFromClipboard,
-                      ),
-                    ],
                   ),
             ),
           ),
@@ -391,11 +464,13 @@ class _TerminalShortcutToolbar extends StatelessWidget {
   const _TerminalShortcutToolbar({
     required this.enabled,
     required this.onKey,
+    required this.onCopy,
     required this.onPaste,
   });
 
   final bool enabled;
   final void Function(TerminalKey key, {bool ctrl, bool alt, bool shift}) onKey;
+  final VoidCallback onCopy;
   final VoidCallback onPaste;
 
   @override
@@ -420,6 +495,18 @@ class _TerminalShortcutToolbar extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           children: [
+            _TerminalShortcutButton.icon(
+              icon: CupertinoIcons.doc_on_doc,
+              tooltip: context.l10n.terminal_copySelection,
+              enabled: enabled,
+              onPressed: onCopy,
+            ),
+            _TerminalShortcutButton.icon(
+              icon: CupertinoIcons.doc_on_clipboard,
+              tooltip: context.l10n.terminal_pasteToTerminal,
+              enabled: enabled,
+              onPressed: onPaste,
+            ),
             _TerminalShortcutButton.text(
               label: 'Esc',
               enabled: enabled,
@@ -483,12 +570,6 @@ class _TerminalShortcutToolbar extends StatelessWidget {
               label: 'Del',
               enabled: enabled,
               onPressed: () => onKey(TerminalKey.delete),
-            ),
-            _TerminalShortcutButton.icon(
-              icon: CupertinoIcons.doc_on_clipboard,
-              tooltip: context.l10n.terminal_pasteToTerminal,
-              enabled: enabled,
-              onPressed: onPaste,
             ),
           ],
         ),
@@ -576,6 +657,98 @@ class _TerminalShortcutButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Tooltip(message: tooltip, child: child),
+    );
+  }
+}
+
+class _FrostedFloatButton extends StatelessWidget {
+  const _FrostedFloatButton({
+    required this.onTap,
+    required this.isDark,
+    required this.isOverlapping,
+  });
+
+  final VoidCallback onTap;
+  final bool isDark;
+  final bool isOverlapping;
+
+  @override
+  Widget build(BuildContext context) {
+    final glowShadows = isOverlapping
+        ? [
+            BoxShadow(
+              color: isDark
+                  ? CupertinoColors.white.withValues(alpha: 0.5)
+                  : CupertinoColors.black.withValues(alpha: 0.15),
+              blurRadius: 12.0,
+            ),
+          ]
+        : null;
+
+    final containerColor = isDark
+        ? CupertinoColors.systemGrey6.darkColor.withValues(
+            alpha: isOverlapping ? 0.6 : 0.35,
+          )
+        : CupertinoColors.systemGrey6.color.withValues(
+            alpha: isOverlapping ? 0.7 : 0.5,
+          );
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: glowShadows,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 35, sigmaY: 35),
+            child: Container(
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: containerColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isDark
+                      ? CupertinoColors.white.withValues(
+                          alpha: isOverlapping ? 0.3 : 0.15,
+                        )
+                      : CupertinoColors.black.withValues(
+                          alpha: isOverlapping ? 0.15 : 0.05,
+                        ),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    CupertinoIcons.rectangle_on_rectangle,
+                    size: 16,
+                    color: AppColors.label(context),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    context.l10n.terminal_float,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -0.2,
+                      color: AppColors.label(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -16,3 +16,16 @@ struct FileTransferActivityAttributes: ActivityAttributes {
   var direction: String
   var fileName: String
 }
+
+@available(iOS 16.1, *)
+struct TerminalActivityAttributes: ActivityAttributes {
+  struct ContentState: Codable, Hashable {
+    var title: String
+    var subtitle: String
+    var status: String
+    var updatedAt: Date
+  }
+
+  var id: String
+}
+

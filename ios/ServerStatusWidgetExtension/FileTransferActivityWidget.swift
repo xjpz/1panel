@@ -183,3 +183,100 @@ private func bytes(_ value: Int64) -> String {
 private func localized(_ key: String) -> String {
   NSLocalizedString(key, bundle: .main, comment: "")
 }
+
+@available(iOSApplicationExtension 16.1, *)
+struct TerminalActivityWidget: Widget {
+  var body: some WidgetConfiguration {
+    ActivityConfiguration(for: TerminalActivityAttributes.self) { context in
+      TerminalActivityView(context: context)
+        .activityBackgroundTint(Color(.systemBackground))
+        .activitySystemActionForegroundColor(.accentColor)
+    } dynamicIsland: { context in
+      DynamicIsland {
+        // Expanded Regions
+        DynamicIslandExpandedRegion(.leading) {
+          HStack(spacing: 6) {
+            Image(systemName: "terminal.fill")
+              .foregroundStyle(.green)
+            Text(context.state.title)
+              .font(.subheadline.weight(.bold))
+              .lineLimit(1)
+          }
+        }
+        DynamicIslandExpandedRegion(.trailing) {
+          HStack(spacing: 4) {
+            Circle()
+              .fill(context.state.status == "connected" ? Color.green : Color.red)
+              .frame(width: 6, height: 6)
+            Text(context.state.status.uppercased())
+              .font(.system(.caption2, design: .rounded).weight(.bold))
+              .foregroundStyle(context.state.status == "connected" ? .green : .secondary)
+          }
+        }
+        DynamicIslandExpandedRegion(.bottom) {
+          VStack(alignment: .leading, spacing: 4) {
+            Text(context.state.subtitle)
+              .font(.system(.footnote, design: .monospaced))
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+            HStack {
+              Spacer()
+              Text("Tap to return to session")
+                .font(.system(.caption2).weight(.medium))
+                .foregroundStyle(.tertiary)
+            }
+          }
+        }
+      } compactLeading: {
+        Image(systemName: "terminal.fill")
+          .foregroundStyle(.green)
+      } compactTrailing: {
+        Text("RUN")
+          .font(.system(.caption2, design: .rounded).weight(.bold))
+          .foregroundStyle(.green)
+      } minimal: {
+        Image(systemName: "terminal.fill")
+          .foregroundStyle(.green)
+      }
+      .keylineTint(.green)
+    }
+  }
+}
+
+@available(iOSApplicationExtension 16.1, *)
+private struct TerminalActivityView: View {
+  let context: ActivityViewContext<TerminalActivityAttributes>
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 10) {
+        Image(systemName: "terminal.fill")
+          .font(.system(size: 18, weight: .semibold))
+          .foregroundStyle(.green)
+          .frame(width: 24)
+
+        VStack(alignment: .leading, spacing: 2) {
+          Text(context.state.title)
+            .font(.headline.weight(.semibold))
+          Text(context.state.subtitle)
+            .font(.system(.subheadline, design: .monospaced))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+
+        Spacer(minLength: 8)
+
+        HStack(spacing: 4) {
+          Circle()
+            .fill(context.state.status == "connected" ? Color.green : Color.red)
+            .frame(width: 6, height: 6)
+          Text(context.state.status.uppercased())
+            .font(.system(.caption, design: .rounded).weight(.bold))
+            .foregroundStyle(context.state.status == "connected" ? .green : .secondary)
+        }
+      }
+    }
+    .padding(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16))
+  }
+}
+

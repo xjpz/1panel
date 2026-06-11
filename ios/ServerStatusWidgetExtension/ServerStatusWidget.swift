@@ -2328,6 +2328,7 @@ struct ServerStatusWidgetBundle: WidgetBundle {
     LegacyServerOverviewWidget()
     if #available(iOSApplicationExtension 16.1, *) {
       FileTransferActivityWidget()
+      TerminalActivityWidget()
     }
   }
 }
