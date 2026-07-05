@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get app_title => 'Mono Dash';
+  String get app_title => '1Panel Pro';
 
   @override
   String get common_ok => 'OK';

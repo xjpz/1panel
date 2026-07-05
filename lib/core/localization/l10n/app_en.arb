@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
   "@@last_modified": "2026-05-07T00:00:00+08:00",
-  "app_title": "Mono Dash",
+  "app_title": "1Panel Pro",
   "@app_title": {
     "description": "Application title shown by the Flutter app."
   },

@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mono Dash</string>
+	<string>1Panel Pro</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Mono Dash</string>
+	<string>1Panel Pro</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -24,6 +24,8 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -39,7 +41,7 @@
 		<string>_lnp._tcp.</string>
 	</array>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Use Face ID to unlock Mono Dash.</string>
+	<string>Use Face ID to unlock 1Panel Pro.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Access 1Panel services and website resources on your local network.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

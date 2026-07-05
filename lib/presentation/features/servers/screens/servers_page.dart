@@ -206,7 +206,7 @@ class _ServerListTabState extends ConsumerState<_ServerListTab> {
       ),
       slivers: [
         CupertinoSliverNavigationBar(
-          largeTitle: const Text('Mono Dash'),
+          largeTitle: const Text('1Panel Pro'),
           backgroundColor: AppColors.background(context),
           border: null,
           transitionBetweenRoutes: false,

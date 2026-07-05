@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// Application title shown by the Flutter app.
   ///
   /// In en, this message translates to:
-  /// **'Mono Dash'**
+  /// **'1Panel Pro'**
   String get app_title;
 
   /// Generic OK action.

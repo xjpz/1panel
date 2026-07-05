@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get app_title => 'Mono Dash';
+  String get app_title => '1Panel Pro';
 
   @override
   String get common_ok => '好';
