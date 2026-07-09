@@ -7592,12 +7592,6 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get settings_appIcon_dark;
 
-  /// Adaptive app icon label.
-  ///
-  /// In en, this message translates to:
-  /// **'Adaptive'**
-  String get settings_appIcon_adaptive;
-
   /// Hint below app icon options.
   ///
   /// In en, this message translates to:

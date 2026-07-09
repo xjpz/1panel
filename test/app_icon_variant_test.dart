@@ -4,26 +4,30 @@ import 'package:mono_dash/presentation/features/settings/providers/app_settings_
 
 void main() {
   group('AppIconVariant', () {
-    test('adapts icon name by brightness', () {
+    test('default keeps the primary icon so the system auto-switches it', () {
       expect(
-        AppIconVariant.adaptive.effectiveWidgetAppIconName(Brightness.light),
+        AppIconVariant.defaultIcon.effectiveAlternateIconName(Brightness.light),
         isNull,
       );
       expect(
-        AppIconVariant.adaptive.effectiveWidgetAppIconName(Brightness.dark),
+        AppIconVariant.defaultIcon.effectiveAlternateIconName(Brightness.dark),
+        isNull,
+      );
+    });
+
+    test('dark forces the dark alternate regardless of brightness', () {
+      expect(
+        AppIconVariant.dark.effectiveAlternateIconName(Brightness.light),
+        AppIconVariant.dark.alternateIconName,
+      );
+      expect(
+        AppIconVariant.dark.effectiveAlternateIconName(Brightness.dark),
         AppIconVariant.dark.alternateIconName,
       );
     });
 
-    test('exposes the same adaptive behavior in alternate icon sync', () {
-      expect(
-        AppIconVariant.adaptive.effectiveAlternateIconName(Brightness.light),
-        isNull,
-      );
-      expect(
-        AppIconVariant.adaptive.effectiveAlternateIconName(Brightness.dark),
-        AppIconVariant.dark.alternateIconName,
-      );
+    test('legacy "adaptive" preference falls back to the default icon', () {
+      expect(AppIconVariant.fromName('adaptive'), AppIconVariant.defaultIcon);
     });
   });
 }

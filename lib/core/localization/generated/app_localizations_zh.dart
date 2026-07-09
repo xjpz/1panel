@@ -4027,9 +4027,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_appIcon_dark => '深色';
 
   @override
-  String get settings_appIcon_adaptive => '自适应';
-
-  @override
   String get settings_appIcon_hint => '提示：切换图标可能在某些系统版本上会有短暂延迟。';
 
   @override

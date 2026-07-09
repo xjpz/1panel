@@ -53,12 +53,8 @@ class MyApp extends ConsumerWidget {
       AppAppearanceMode.dark => Brightness.dark,
     };
     final systemBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-    final widgetIconBrightness =
-        appIconVariant == AppIconVariant.adaptive
-            ? systemBrightness
-            : effectiveBrightness;
     final widgetAppIconName = appIconVariant.effectiveWidgetAppIconName(
-      widgetIconBrightness,
+      effectiveBrightness,
     );
 
     return _AppIconAutoSync(
@@ -407,13 +403,10 @@ class _AppIconAutoSyncState extends State<_AppIconAutoSync>
   Future<void> _syncAppIcon() async {
     if (!widget.enabled || !Platform.isIOS) return;
 
-    final brightness = switch (widget.variant) {
-      AppIconVariant.adaptive => widget.systemBrightness,
-      _ => switch (widget.appearanceMode) {
+    final brightness = switch (widget.appearanceMode) {
       AppAppearanceMode.system => widget.systemBrightness,
       AppAppearanceMode.light => Brightness.light,
       AppAppearanceMode.dark => Brightness.dark,
-    },
     };
     final iconName = widget.variant.effectiveAlternateIconName(brightness);
 

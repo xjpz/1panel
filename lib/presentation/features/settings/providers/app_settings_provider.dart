@@ -9,9 +9,10 @@ import '../../../../core/localization/generated/app_localizations.dart';
 part 'app_settings_provider.g.dart';
 
 enum AppIconVariant {
+  // 「默认」由系统按夜间模式自动切换主图标(icon_2)的浅色/深色外观;
+  // 「深色」强制使用深色备用图标。原「自适应」选项已移除,旧偏好会回落到默认。
   defaultIcon('default', null, 'assets/icons/1panel_mate_app_icon_2.png'),
-  dark('icon_dark', 'icon_dark', 'assets/icons/mono-dash-appicon-dark.png'),
-  adaptive('adaptive', null, 'assets/icons/1panel_mate_app_icon_2.png');
+  dark('icon_dark', 'icon_dark', 'assets/icons/mono-dash-appicon-dark.png');
 
   const AppIconVariant(
     this.storageName,
@@ -26,31 +27,19 @@ enum AppIconVariant {
   String labelOf(AppLocalizations l10n) => switch (this) {
     AppIconVariant.defaultIcon => l10n.settings_appIcon_default,
     AppIconVariant.dark => l10n.settings_appIcon_dark,
-    AppIconVariant.adaptive => l10n.settings_appIcon_adaptive,
   };
 
   String? effectiveAlternateIconName(Brightness brightness) => switch (this) {
     AppIconVariant.defaultIcon => null,
     AppIconVariant.dark => alternateIconName,
-    AppIconVariant.adaptive =>
-      brightness == Brightness.dark
-          ? AppIconVariant.dark.alternateIconName
-          : null,
   };
 
   String? effectiveWidgetAppIconName(Brightness brightness) => switch (this) {
     AppIconVariant.defaultIcon => null,
     AppIconVariant.dark => alternateIconName,
-    AppIconVariant.adaptive => effectiveAlternateIconName(brightness),
   };
 
-  String effectiveAssetPath(Brightness brightness) => switch (this) {
-    AppIconVariant.adaptive =>
-      brightness == Brightness.dark
-          ? AppIconVariant.dark.assetPath
-          : AppIconVariant.defaultIcon.assetPath,
-    _ => assetPath,
-  };
+  String effectiveAssetPath(Brightness brightness) => assetPath;
 
   static AppIconVariant fromName(String? name) {
     return values.firstWhere(

@@ -1277,7 +1277,6 @@
   "settings_appIcon_selectTitle": "选择图标",
   "settings_appIcon_default": "默认",
   "settings_appIcon_dark": "深色",
-  "settings_appIcon_adaptive": "自适应",
   "settings_appIcon_hint": "提示：切换图标可能在某些系统版本上会有短暂延迟。",
   "settings_appIcon_unsupported": "当前平台不支持切换 App 图标",
   "settings_appIcon_failedTitle": "切换图标失败",

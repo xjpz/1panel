@@ -5658,10 +5658,6 @@
   "@settings_appIcon_dark": {
     "description": "Dark app icon label."
   },
-  "settings_appIcon_adaptive": "Adaptive",
-  "@settings_appIcon_adaptive": {
-    "description": "Adaptive app icon label."
-  },
   "settings_appIcon_hint": "Tip: icon changes may take a moment on some system versions.",
   "@settings_appIcon_hint": {
     "description": "Hint below app icon options."
