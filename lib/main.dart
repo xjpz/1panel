@@ -52,14 +52,20 @@ class MyApp extends ConsumerWidget {
       AppAppearanceMode.light => Brightness.light,
       AppAppearanceMode.dark => Brightness.dark,
     };
-    final widgetAppIconName = appIconVariant.effectiveAlternateIconName(
-      effectiveBrightness,
+    final systemBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    final widgetIconBrightness =
+        appIconVariant == AppIconVariant.adaptive
+            ? systemBrightness
+            : effectiveBrightness;
+    final widgetAppIconName = appIconVariant.effectiveWidgetAppIconName(
+      widgetIconBrightness,
     );
 
     return _AppIconAutoSync(
       enabled: settingsAsync.hasValue,
       appearanceMode: appearanceMode,
       variant: appIconVariant,
+      systemBrightness: systemBrightness,
       child: _IosServerWidgetSettingsSync(
         appLocaleCode: widgetLocaleCode,
         appIconName: widgetAppIconName,
@@ -316,12 +322,14 @@ class _AppIconAutoSync extends StatefulWidget {
     required this.enabled,
     required this.appearanceMode,
     required this.variant,
+    required this.systemBrightness,
     required this.child,
   });
 
   final bool enabled;
   final AppAppearanceMode appearanceMode;
   final AppIconVariant variant;
+  final Brightness systemBrightness;
   final Widget child;
 
   @override
@@ -330,11 +338,9 @@ class _AppIconAutoSync extends StatefulWidget {
 
 class _AppIconAutoSyncState extends State<_AppIconAutoSync>
     with WidgetsBindingObserver {
-  static const _syncDelay = Duration(seconds: 2);
+  static const _syncDelay = Duration(milliseconds: 500);
 
   Timer? _syncTimer;
-  bool _hasAppliedIconName = false;
-  String? _lastAppliedIconName;
   bool _isForeground = true;
 
   @override
@@ -353,7 +359,8 @@ class _AppIconAutoSyncState extends State<_AppIconAutoSync>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.enabled != widget.enabled ||
         oldWidget.appearanceMode != widget.appearanceMode ||
-        oldWidget.variant != widget.variant) {
+        oldWidget.variant != widget.variant ||
+        oldWidget.systemBrightness != widget.systemBrightness) {
       _scheduleSyncAppIcon();
     }
   }
@@ -400,14 +407,15 @@ class _AppIconAutoSyncState extends State<_AppIconAutoSync>
   Future<void> _syncAppIcon() async {
     if (!widget.enabled || !Platform.isIOS) return;
 
-    final brightness = switch (widget.appearanceMode) {
-      AppAppearanceMode.system =>
-        WidgetsBinding.instance.platformDispatcher.platformBrightness,
+    final brightness = switch (widget.variant) {
+      AppIconVariant.adaptive => widget.systemBrightness,
+      _ => switch (widget.appearanceMode) {
+      AppAppearanceMode.system => widget.systemBrightness,
       AppAppearanceMode.light => Brightness.light,
       AppAppearanceMode.dark => Brightness.dark,
+    },
     };
     final iconName = widget.variant.effectiveAlternateIconName(brightness);
-    if (_hasAppliedIconName && _lastAppliedIconName == iconName) return;
 
     try {
       final isSupported =
@@ -417,8 +425,6 @@ class _AppIconAutoSyncState extends State<_AppIconAutoSync>
       final currentIconName =
           await DynamicAppIconFlutterPlus.getAlternateIconName();
       if (currentIconName == iconName) {
-        _hasAppliedIconName = true;
-        _lastAppliedIconName = iconName;
         return;
       }
 
@@ -426,8 +432,6 @@ class _AppIconAutoSyncState extends State<_AppIconAutoSync>
         iconName,
         showAlert: false,
       );
-      _hasAppliedIconName = true;
-      _lastAppliedIconName = iconName;
     } catch (error) {
       debugPrint('Failed to sync app icon: $error');
     }

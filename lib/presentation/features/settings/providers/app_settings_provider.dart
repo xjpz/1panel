@@ -38,6 +38,12 @@ enum AppIconVariant {
           : null,
   };
 
+  String? effectiveWidgetAppIconName(Brightness brightness) => switch (this) {
+    AppIconVariant.defaultIcon => null,
+    AppIconVariant.dark => alternateIconName,
+    AppIconVariant.adaptive => effectiveAlternateIconName(brightness),
+  };
+
   String effectiveAssetPath(Brightness brightness) => switch (this) {
     AppIconVariant.adaptive =>
       brightness == Brightness.dark
