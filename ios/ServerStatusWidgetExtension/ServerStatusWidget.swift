@@ -84,11 +84,95 @@ extension View {
   }
 
   @ViewBuilder
-  func serverWidgetBackground() -> some View {
+  func serverWidgetBackground(_ appearance: ServerWidgetAppearance = .default) -> some View {
     if #available(iOSApplicationExtension 17.0, *) {
-      self.containerBackground(.background, for: .widget)
+      self
+        .preferredColorScheme(appearance.usesDarkForegroundEnvironment ? .dark : nil)
+        .foregroundStyle(appearance.usesWhiteForeground ? Color.white : Color.primary)
+        .containerBackground(for: .widget) {
+          ServerWidgetAppearanceBackground(appearance: appearance)
+        }
     } else {
       self.background(Color(.systemBackground))
+    }
+  }
+}
+
+enum ServerWidgetAppearance: String, Equatable {
+  case `default`
+  case transparent
+  case liquidGlass
+  case dark
+
+  var usesWhiteForeground: Bool {
+    self == .transparent || self == .liquidGlass
+  }
+
+  var usesDarkForegroundEnvironment: Bool {
+    usesWhiteForeground || self == .dark
+  }
+}
+
+private struct ServerWidgetAppearanceBackground: View {
+  let appearance: ServerWidgetAppearance
+
+  @ViewBuilder
+  var body: some View {
+    switch appearance {
+    case .default:
+      Color(.systemBackground)
+    case .transparent:
+      // A fully clear container is treated as a missing background by the
+      // Home Screen renderer and gets replaced with the default widget fill.
+      // Keep one nearly invisible pixel layer so WidgetKit preserves the
+      // configured container instead.
+      Color.white.opacity(0.001)
+    case .liquidGlass:
+      ContainerRelativeShape()
+        .fill(
+          LinearGradient(
+            colors: [
+              Color(red: 0.12, green: 0.18, blue: 0.27).opacity(0.96),
+              Color(red: 0.08, green: 0.12, blue: 0.20).opacity(0.94)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+        )
+        .overlay {
+          ContainerRelativeShape()
+            .fill(
+              LinearGradient(
+                colors: [.white.opacity(0.24), .cyan.opacity(0.11), .clear],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+              )
+            )
+        }
+        .overlay {
+          ContainerRelativeShape()
+            .fill(
+              RadialGradient(
+                colors: [.white.opacity(0.22), .clear],
+                center: .topLeading,
+                startRadius: 0,
+                endRadius: 230
+              )
+            )
+        }
+        .overlay {
+          ContainerRelativeShape()
+            .strokeBorder(
+              LinearGradient(
+                colors: [.white.opacity(0.48), .white.opacity(0.08), .cyan.opacity(0.20)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+              ),
+              lineWidth: 0.8
+            )
+        }
+    case .dark:
+      Color(red: 0.055, green: 0.065, blue: 0.085)
     }
   }
 }
@@ -692,7 +776,9 @@ struct ServerSelectionIntent: WidgetConfigurationIntent {
   var language: ServerWidgetLanguage
 
   static var parameterSummary: some ParameterSummary {
-    Summary("Show \(\.$server)")
+    Summary("Show \(\.$server)") {
+      \.$language
+    }
   }
 }
 
@@ -709,6 +795,12 @@ struct ServerOverviewSelectionIntent: WidgetConfigurationIntent {
 
   @Parameter(title: "widget.intent.language.parameter", default: .followApp)
   var language: ServerWidgetLanguage
+
+  static var parameterSummary: some ParameterSummary {
+    Summary("Show \(\.$servers)") {
+      \.$language
+    }
+  }
 }
 
 @available(iOSApplicationExtension 17.0, *)
@@ -799,6 +891,7 @@ struct ServerEntry: TimelineEntry {
   let errorMessage: String?
   let cardStyle: ServerWidgetCardStyle
   let languageCode: String?
+  var appearance: ServerWidgetAppearance = .default
 }
 
 private func placeholderServerEntry(cardStyle: ServerWidgetCardStyle) -> ServerEntry {
@@ -851,7 +944,8 @@ private func placeholderServerEntry(cardStyle: ServerWidgetCardStyle) -> ServerE
 
 private func emptyServerEntry(
   cardStyle: ServerWidgetCardStyle,
-  languageCode: String?
+  languageCode: String?,
+  appearance: ServerWidgetAppearance = .default
 ) -> ServerEntry {
   ServerEntry(
     date: Date(),
@@ -859,16 +953,19 @@ private func emptyServerEntry(
     snapshot: nil,
     errorMessage: nil,
     cardStyle: cardStyle,
-    languageCode: languageCode
+    languageCode: languageCode,
+    appearance: appearance
   )
 }
 
 @available(iOSApplicationExtension 17.0, *)
 struct ServerStatusProvider: AppIntentTimelineProvider {
   let cardStyle: ServerWidgetCardStyle
+  let appearance: ServerWidgetAppearance
 
-  init(cardStyle: ServerWidgetCardStyle) {
+  init(cardStyle: ServerWidgetCardStyle, appearance: ServerWidgetAppearance = .default) {
     self.cardStyle = cardStyle
+    self.appearance = appearance
   }
 
   func placeholder(in context: Context) -> ServerEntry {
@@ -882,7 +979,8 @@ struct ServerStatusProvider: AppIntentTimelineProvider {
     guard let server = WidgetStore.selectedServer(id: configuration.server?.id) else {
       return emptyServerEntry(
         cardStyle: cardStyle,
-        languageCode: configuration.language.resolvedCode
+        languageCode: configuration.language.resolvedCode,
+        appearance: appearance
       )
     }
     let snapshot = context.isPreview
@@ -894,7 +992,8 @@ struct ServerStatusProvider: AppIntentTimelineProvider {
       snapshot: snapshot,
       errorMessage: WidgetStore.selectedError(id: String(server.id)),
       cardStyle: cardStyle,
-      languageCode: configuration.language.resolvedCode
+      languageCode: configuration.language.resolvedCode,
+      appearance: appearance
     )
   }
 
@@ -907,7 +1006,8 @@ struct ServerStatusProvider: AppIntentTimelineProvider {
         entries: [
           emptyServerEntry(
             cardStyle: cardStyle,
-            languageCode: configuration.language.resolvedCode
+            languageCode: configuration.language.resolvedCode,
+            appearance: appearance
           )
         ],
         policy: .after(Date().addingTimeInterval(900))
@@ -924,7 +1024,8 @@ struct ServerStatusProvider: AppIntentTimelineProvider {
       snapshot: snapshot,
       errorMessage: WidgetStore.selectedError(id: String(server.id)),
       cardStyle: cardStyle,
-      languageCode: configuration.language.resolvedCode
+      languageCode: configuration.language.resolvedCode,
+      appearance: appearance
     )
     return Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(900)))
   }
@@ -1007,7 +1108,7 @@ struct ServerStatusWidgetEntryView: View {
         emptyCard
       }
     }
-    .serverWidgetBackground()
+    .serverWidgetBackground(entry.appearance)
   }
 
   func smallHeader(_ snapshot: ServerSnapshot) -> some View {
@@ -1591,6 +1692,7 @@ struct ServerOverviewEntry: TimelineEntry {
   let items: [ServerOverviewItem]
   let selectedCount: Int
   let languageCode: String?
+  var appearance: ServerWidgetAppearance = .default
 }
 
 private func placeholderServerOverviewEntry() -> ServerOverviewEntry {
@@ -1662,6 +1764,12 @@ private func placeholderServerOverviewEntry() -> ServerOverviewEntry {
 
 @available(iOSApplicationExtension 17.0, *)
 struct ServerOverviewProvider: AppIntentTimelineProvider {
+  let appearance: ServerWidgetAppearance
+
+  init(appearance: ServerWidgetAppearance = .default) {
+    self.appearance = appearance
+  }
+
   func placeholder(in context: Context) -> ServerOverviewEntry {
     placeholderServerOverviewEntry()
   }
@@ -1723,7 +1831,8 @@ struct ServerOverviewProvider: AppIntentTimelineProvider {
       date: Date(),
       items: items,
       selectedCount: servers.count,
-      languageCode: configuration.language.resolvedCode
+      languageCode: configuration.language.resolvedCode,
+      appearance: appearance
     )
   }
 
@@ -1850,7 +1959,7 @@ struct ServerOverviewWidgetEntryView: View {
         listOverviewCard(limit: maxOverviewServerCount)
       }
     }
-    .serverWidgetBackground()
+    .serverWidgetBackground(entry.appearance)
   }
 
   private var smallOverviewCard: some View {
@@ -2205,6 +2314,180 @@ struct ServerOverviewWidgetEntryView: View {
 }
 
 @available(iOSApplicationExtension 17.0, *)
+enum StyledServerWidgetContent: String, AppEnum {
+  case simple
+  case horizontalMetrics
+  case overview
+
+  static var typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("widget.styled.content.type")
+  )
+  static var caseDisplayRepresentations: [StyledServerWidgetContent: DisplayRepresentation] = [
+    .simple: DisplayRepresentation(title: LocalizedStringResource("widget.card.style.simple")),
+    .horizontalMetrics: DisplayRepresentation(title: LocalizedStringResource("widget.card.style.horizontal_metrics")),
+    .overview: DisplayRepresentation(title: LocalizedStringResource("widget.display.name.overview"))
+  ]
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct StyledServerWidgetConfigurationIntent: WidgetConfigurationIntent {
+  static var title = LocalizedStringResource("widget.styled.intent.title")
+  static var description = IntentDescription("widget.styled.intent.description")
+
+  @Parameter(title: "widget.styled.content.parameter", default: .simple)
+  var content: StyledServerWidgetContent
+
+  @Parameter(title: "widget.intent.server.parameter")
+  var server: ServerEntity?
+
+  @Parameter(
+    title: "widget.intent.servers.parameter",
+    size: IntentCollectionSize(min: 0, max: 3)
+  )
+  var servers: [ServerEntity]?
+
+  @Parameter(title: "widget.intent.language.parameter", default: .followApp)
+  var language: ServerWidgetLanguage
+}
+
+struct StyledServerWidgetEntry: TimelineEntry {
+  let date: Date
+  let content: Content
+
+  enum Content {
+    case server(ServerEntry)
+    case overview(ServerOverviewEntry)
+  }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct StyledServerWidgetProvider: AppIntentTimelineProvider {
+  let appearance: ServerWidgetAppearance
+
+  func placeholder(in context: Context) -> StyledServerWidgetEntry {
+    StyledServerWidgetEntry(
+      date: Date(),
+      content: .server(
+        ServerStatusProvider(cardStyle: .simple, appearance: appearance)
+          .placeholder(in: context)
+      )
+    )
+  }
+
+  func snapshot(
+    for configuration: StyledServerWidgetConfigurationIntent,
+    in context: Context
+  ) async -> StyledServerWidgetEntry {
+    await entry(for: configuration, in: context)
+  }
+
+  func timeline(
+    for configuration: StyledServerWidgetConfigurationIntent,
+    in context: Context
+  ) async -> Timeline<StyledServerWidgetEntry> {
+    let entry = await entry(for: configuration, in: context)
+    return Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(900)))
+  }
+
+  private func entry(
+    for configuration: StyledServerWidgetConfigurationIntent,
+    in context: Context
+  ) async -> StyledServerWidgetEntry {
+    switch configuration.content {
+    case .simple, .horizontalMetrics:
+      var serverConfiguration = ServerSelectionIntent()
+      serverConfiguration.server = configuration.server
+      serverConfiguration.language = configuration.language
+      let cardStyle: ServerWidgetCardStyle = configuration.content == .simple
+        ? .simple
+        : .horizontalMetrics
+      let entry = await ServerStatusProvider(cardStyle: cardStyle, appearance: appearance)
+        .snapshot(for: serverConfiguration, in: context)
+      return StyledServerWidgetEntry(date: entry.date, content: .server(entry))
+    case .overview:
+      var overviewConfiguration = ServerOverviewSelectionIntent()
+      overviewConfiguration.servers = configuration.servers
+      overviewConfiguration.language = configuration.language
+      let entry = await ServerOverviewProvider(appearance: appearance)
+        .snapshot(for: overviewConfiguration, in: context)
+      return StyledServerWidgetEntry(date: entry.date, content: .overview(entry))
+    }
+  }
+}
+
+struct StyledServerWidgetEntryView: View {
+  let entry: StyledServerWidgetEntry
+
+  var body: some View {
+    switch entry.content {
+    case let .server(serverEntry):
+      ServerStatusWidgetEntryView(entry: serverEntry)
+    case let .overview(overviewEntry):
+      ServerOverviewWidgetEntryView(entry: overviewEntry)
+    }
+  }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct TransparentServerDesktopWidget: Widget {
+  let kind = "MonoDashTransparentWidget"
+
+  var body: some WidgetConfiguration {
+    styledServerWidgetConfiguration(kind: kind, appearance: .transparent)
+  }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct LiquidGlassServerDesktopWidget: Widget {
+  let kind = "MonoDashLiquidGlassWidget"
+
+  var body: some WidgetConfiguration {
+    styledServerWidgetConfiguration(kind: kind, appearance: .liquidGlass)
+  }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+struct DarkServerDesktopWidget: Widget {
+  let kind = "MonoDashDarkWidget"
+
+  var body: some WidgetConfiguration {
+    styledServerWidgetConfiguration(kind: kind, appearance: .dark)
+  }
+}
+
+@available(iOSApplicationExtension 17.0, *)
+private func styledServerWidgetConfiguration(
+  kind: String,
+  appearance: ServerWidgetAppearance
+) -> some WidgetConfiguration {
+  AppIntentConfiguration(
+    kind: kind,
+    intent: StyledServerWidgetConfigurationIntent.self,
+    provider: StyledServerWidgetProvider(appearance: appearance)
+  ) { entry in
+    StyledServerWidgetEntryView(entry: entry)
+  }
+  .configurationDisplayName(styledWidgetDisplayName(appearance))
+  .description("widget.styled.display.description")
+  .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+  .contentMarginsDisabled()
+  .containerBackgroundRemovable(true)
+}
+
+private func styledWidgetDisplayName(_ appearance: ServerWidgetAppearance) -> LocalizedStringKey {
+  switch appearance {
+  case .default:
+    return "widget.display.name"
+  case .transparent:
+    return "widget.styled.display.transparent"
+  case .liquidGlass:
+    return "widget.styled.display.liquid_glass"
+  case .dark:
+    return "widget.styled.display.dark"
+  }
+}
+
+@available(iOSApplicationExtension 17.0, *)
 struct ServerStatusWidget: Widget {
   let kind = simpleWidgetKind
 
@@ -2220,6 +2503,7 @@ struct ServerStatusWidget: Widget {
     .description("widget.display.description.simple")
     .supportedFamilies([.systemSmall, .systemMedium])
     .contentMarginsDisabled()
+    .containerBackgroundRemovable(true)
   }
 }
 
@@ -2239,6 +2523,7 @@ struct ServerStatusHorizontalMetricsWidget: Widget {
     .description("widget.display.description.horizontal_metrics")
     .supportedFamilies([.systemSmall, .systemMedium])
     .contentMarginsDisabled()
+    .containerBackgroundRemovable(true)
   }
 }
 
@@ -2258,6 +2543,7 @@ struct ServerOverviewWidget: Widget {
     .description("widget.display.description.overview")
     .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     .contentMarginsDisabled()
+    .containerBackgroundRemovable(true)
   }
 }
 
@@ -2319,6 +2605,9 @@ struct LegacyServerOverviewWidget: Widget {
 struct ServerStatusWidgetBundle: WidgetBundle {
   var body: some Widget {
     if #available(iOSApplicationExtension 17.0, *) {
+      TransparentServerDesktopWidget()
+      LiquidGlassServerDesktopWidget()
+      DarkServerDesktopWidget()
       ServerStatusWidget()
       ServerStatusHorizontalMetricsWidget()
       ServerOverviewWidget()

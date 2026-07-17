@@ -22,6 +22,7 @@
 		4F2A00500000000000000001 /* IntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2A00400000000000000001 /* IntentHandler.swift */; };
 		4F2A00900000000000000001 /* ServerStatusWidgetIntentsExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 4F2A00800000000000000001 /* ServerStatusWidgetIntentsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4F3A00100000000000000001 /* ICloudKeyValueBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3A00110000000000000001 /* ICloudKeyValueBridge.swift */; };
+		4F4A00100000000000000001 /* WidgetDescriptorBackgroundInjector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4F4A00110000000000000001 /* WidgetDescriptorBackgroundInjector.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
@@ -110,6 +111,8 @@
 		4F2A00700000000000000001 /* ServerStatusWidgetIntentsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ServerStatusWidgetIntentsExtension.entitlements; sourceTree = "<group>"; };
 		4F2A00800000000000000001 /* ServerStatusWidgetIntentsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ServerStatusWidgetIntentsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F3A00110000000000000001 /* ICloudKeyValueBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudKeyValueBridge.swift; sourceTree = "<group>"; };
+		4F4A00110000000000000001 /* WidgetDescriptorBackgroundInjector.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = WidgetDescriptorBackgroundInjector.mm; sourceTree = "<group>"; };
+		4F4A00120000000000000001 /* WidgetDescriptorBackgroundInjector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WidgetDescriptorBackgroundInjector.h; sourceTree = "<group>"; };
 		50C0E8586D0DF805F22613C8 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		63492E89C6129C6799A17A6D /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FC94D3265219D02224B9B8B /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -194,6 +197,8 @@
 		7840C1B4C548818625D1CB59 /* ServerStatusWidgetExtension */ = {
 			isa = PBXGroup;
 			children = (
+				4F4A00110000000000000001 /* WidgetDescriptorBackgroundInjector.mm */,
+				4F4A00120000000000000001 /* WidgetDescriptorBackgroundInjector.h */,
 				3D68CCB9A544FE1CC82DC1E5 /* ServerStatusWidget.swift */,
 				4F2A00100000000000000001 /* ServerStatusWidget.intentdefinition */,
 				4F1A00110000000000000001 /* ServerStatusWidgetSimpleStyle.swift */,
@@ -575,6 +580,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F4A00100000000000000001 /* WidgetDescriptorBackgroundInjector.mm in Sources */,
 				B972D53AEF707CB630677405 /* ServerStatusWidget.swift in Sources */,
 				4F1A00100000000000000001 /* ServerStatusWidgetSimpleStyle.swift in Sources */,
 				4F1A00200000000000000001 /* ServerStatusWidgetHorizontalMetricsStyle.swift in Sources */,
