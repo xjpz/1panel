@@ -20,12 +20,15 @@ class RevenueCatConfig {
   static const iosApiKey = 'appl_uQclCTdAgutFrwPUlmIzMxhagIe';
   static const androidApiKey = 'goog_YjNRxmMCFThKyAaXIPAiralEXXJ';
   static const webApiKey = '';
+  static const testApiKey = 'test_SEIhVrgkUMdVbyxHkyETYJbKADc';
   static const entitlementId = 'Mono Dash Unlimited';
   static const offeringId = 'default';
   static const freeServerLimit = 1;
   static const bypassServerLimitCheck = true;
+  static const testFlightApiBaseUrl = 'https://testflight.dhcp.services';
 
   static String? get apiKey {
+    if (kDebugMode) return _usableApiKey(testApiKey);
     if (kIsWeb) return webApiKey.isEmpty ? null : webApiKey;
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
@@ -341,6 +344,12 @@ class PurchaseController extends AsyncNotifier<PurchaseState> {
       }
       rethrow;
     }
+  }
+
+  Future<String> revenueCatCustomerIdForTestFlight() async {
+    await _ensureRevenueCatConfiguredForUserAction();
+    await _withRevenueCatReadTimeout(rc.Purchases.getCustomerInfo());
+    return rc.Purchases.appUserID;
   }
 
   Future<void> _ensureRevenueCatConfiguredForUserAction() async {

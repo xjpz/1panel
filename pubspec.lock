@@ -581,6 +581,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.8.0"
+  inspire_blur:
+    dependency: "direct main"
+    description:
+      name: inspire_blur
+      sha256: "918b9bc4d35609c86957f50210a2d27471f3dfb66a2f6dd7f1c8b0261006050b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   intl:
     dependency: "direct main"
     description:
@@ -669,6 +677,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
+  liquid_glass_widgets:
+    dependency: "direct main"
+    description:
+      name: liquid_glass_widgets
+      sha256: a6a0cd3ee751ee16a72d4bafc2748591f2e7660d3a91ab58f68edea2aa2bff88
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.21.4"
   local_auth:
     dependency: "direct main"
     description:
@@ -1380,4 +1396,4 @@ packages:
     version: "0.0.6"
 sdks:
   dart: ">=3.11.1 <4.0.0"
-  flutter: ">=3.38.0"
+  flutter: ">=3.41.0"
