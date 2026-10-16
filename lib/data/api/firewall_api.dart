@@ -6,11 +6,21 @@ import '../../core/network/network_exceptions.dart';
 import '../dto/common/page_result.dart';
 import '../dto/firewall/firewall_base_info_dto.dart';
 import '../dto/firewall/rule_info_dto.dart';
+import 'unified_firewall_api.dart';
 
 class FirewallApi {
   FirewallApi(this._client);
 
   final DioClient _client;
+
+  Future<void> _requireLegacyRules() async {
+    final version = await UnifiedFirewallApi(
+      _client,
+    ).detectVersion(refresh: true);
+    if (version != FirewallApiVersion.legacy) {
+      throw StateError('防火墙已升级，请重新打开规则页面');
+    }
+  }
 
   /// 获取防火墙基本信息。
   Future<FirewallBaseInfoDto> getBaseInfo() async {
@@ -32,8 +42,8 @@ class FirewallApi {
   }
 
   bool _shouldFallbackBaseInfoGet(AppNetworkException error) {
-    final statusCode = error.statusCode;
-    return statusCode == 404 || statusCode == 405;
+    return error is HttpException &&
+        (error.statusCode == 404 || error.statusCode == 405);
   }
 
   /// 搜索防火墙规则（分页）。
@@ -75,6 +85,7 @@ class FirewallApi {
 
   /// 添加/删除端口规则。
   Future<void> operatePortRule(Map<String, dynamic> body) async {
+    await _requireLegacyRules();
     await _client.post<Map<String, dynamic>>(
       '/api/v2/hosts/firewall/port',
       data: body,
@@ -83,6 +94,7 @@ class FirewallApi {
 
   /// 添加/删除 IP 规则。
   Future<void> operateIpRule(Map<String, dynamic> body) async {
+    await _requireLegacyRules();
     await _client.post<Map<String, dynamic>>(
       '/api/v2/hosts/firewall/ip',
       data: body,
@@ -91,6 +103,7 @@ class FirewallApi {
 
   /// 更新端口规则（先删旧规则，再加新规则）。
   Future<void> updatePortRule(Map<String, dynamic> body) async {
+    await _requireLegacyRules();
     await _client.post<Map<String, dynamic>>(
       '/api/v2/hosts/firewall/update/port',
       data: body,
@@ -99,6 +112,7 @@ class FirewallApi {
 
   /// 更新地址规则（先删旧规则，再加新规则）。
   Future<void> updateAddrRule(Map<String, dynamic> body) async {
+    await _requireLegacyRules();
     await _client.post<Map<String, dynamic>>(
       '/api/v2/hosts/firewall/update/addr',
       data: body,
@@ -107,6 +121,7 @@ class FirewallApi {
 
   /// 批量操作规则（删除）。
   Future<void> batchOperate(Map<String, dynamic> body) async {
+    await _requireLegacyRules();
     await _client.post<Map<String, dynamic>>(
       '/api/v2/hosts/firewall/batch',
       data: body,
@@ -115,6 +130,7 @@ class FirewallApi {
 
   /// 更新规则描述。
   Future<void> updateDescription(Map<String, dynamic> body) async {
+    await _requireLegacyRules();
     await _client.post<Map<String, dynamic>>(
       '/api/v2/hosts/firewall/update/description',
       data: body,
