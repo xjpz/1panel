@@ -7,7 +7,8 @@
 云端产品名称为 `Runner`，关联 App `1Panel Pro`（App ID `6782614307`）。
 自动触发条件仅包含 `testflight/` 前缀的标签，归档 Scheme 为 `Runner`，分发准备方式为
 `App Store Connect`；固定 Xcode `26.6 (17F113)` 和 macOS Tahoe `26.5.1 (25F80)`。
-保留手动分支构建入口，没有配置测试组自动分发。
+保留手动分支构建入口。已配置 **TestFlight Internal Testing - iOS** 后置动作，
+将 `Archive - iOS` 产物自动分发到现有“内测组”（配置时 3 名成员）。
 
 首次云构建尚未运行。需要打包时，先将代码推送到 `origin`，再推送指向该提交的
 新 `testflight/*` 标签；标签对应提交必须包含构建脚本和共享 Xcode Cloud manifest。
@@ -39,8 +40,8 @@ Swift Package Manager，安装 iOS 引擎、Dart 依赖及需要的 CocoaPods �
 6. 在 App 的 Xcode Cloud 设置中检查 **Next Build Number**，当前已设为 `18`。
    此值应大于 App Store Connect 中已有的最高构建号；后续同时使用本地和云端上传时，
    继续检查两种构建号是否冲突。
-7. 如需自动分发，经明确授权后，在 **Post-Actions → TestFlight Internal Testing** 中选择
-   现有内部测试组。当前 App 存在“内测组”（3 名成员），但尚未启用自动分发。
+7. 在 **Post-Actions → TestFlight Internal Testing** 中选择现有内部测试组。
+   2026-10-30 已按用户明确授权选择“内测组”（3 名成员），关联 `Archive - iOS` 产物并保存。
    外部测试组和 App Store 正式发布需要另外配置。
 8. 保存后检查起始条件、归档动作、签名和测试组。此步骤不要求立即运行构建。
 
