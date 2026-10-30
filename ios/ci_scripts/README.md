@@ -10,9 +10,10 @@
 保留手动分支构建入口。已配置 **TestFlight Internal Testing - iOS** 后置动作，
 将 `Archive - iOS` 产物自动分发到现有“内测组”（配置时 3 名成员）。
 
-首次云构建尚未运行。需要打包时，先将代码推送到 `origin`，再推送指向该提交的
+需要打包时，先将代码推送到 `origin`，再推送指向该提交的
 新 `testflight/*` 标签；标签对应提交必须包含构建脚本和共享 Xcode Cloud manifest。
-云端下一个构建号设为 `18`，配置时 TestFlight 中可见的最新版本为 `1.1.4 (14)`。
+接入时云端起始构建号设为 `18`，后续由 Xcode Cloud 递增；配置时 TestFlight 中可见的
+最新版本为 `1.1.4 (14)`。
 
 脚本从 `.fvmrc` 读取固定 Flutter 版本（当前为 `3.44.2`），使用项目已启用的
 Swift Package Manager，安装 iOS 引擎、Dart 依赖及需要的 CocoaPods 依赖，
@@ -37,7 +38,7 @@ Swift Package Manager，安装 iOS 引擎、Dart 依赖及需要的 CocoaPods �
 5. 添加 **Archive → iOS → Any iOS Device**，配置为 `Release`，
    分发准备方式选 **App Store Connect**。当前固定 Xcode `26.6` 和
    macOS Tahoe `26.5.1`；Flutter `3.44.2` 与该组合仍需首次云端归档验证。
-6. 在 App 的 Xcode Cloud 设置中检查 **Next Build Number**，当前已设为 `18`。
+6. 在 App 的 Xcode Cloud 设置中检查 **Next Build Number**，接入时初始化为 `18`。
    此值应大于 App Store Connect 中已有的最高构建号；后续同时使用本地和云端上传时，
    继续检查两种构建号是否冲突。
 7. 在 **Post-Actions → TestFlight Internal Testing** 中选择现有内部测试组。
@@ -52,8 +53,8 @@ Swift Package Manager，安装 iOS 引擎、Dart 依赖及需要的 CocoaPods �
 以下命令会推送标签并触发真实云构建，应在代码已提交、推送且需要打包时执行：
 
 ```bash
-git tag testflight/1.1.7-20261030.1
-git push origin testflight/1.1.7-20261030.1
+git tag testflight/1.1.7-20261030.2
+git push origin testflight/1.1.7-20261030.2
 ```
 
 每次发布使用新标签，不要移动已使用的标签。标签名用于触发，App 版本仍以
@@ -72,6 +73,23 @@ git push origin testflight/1.1.7-20261030.1
 post-clone 脚本（复用临时 SDK，`CI_BUILD_NUMBER=18`），依赖安装、Swift 包解析、
 CocoaPods 安装和 Release 配置生成均通过，四个依赖锁文件没有变化。
 未执行签名归档或上传。Shell 语法和无效构建号的提前失败检查也已通过。
+
+## 首次安装 Flutter 时的版本解析
+
+首个云端构建在 post-clone 阶段出现 `JSONDecodeError`。旧脚本将
+`flutter --version --machine` 的标准输出直接交给 JSON 解析器；新 SDK 初始化期间的
+进度输出可能出现在版本 JSON 之前，因此不能把整个输出流当作一个 JSON 文档。
+脚本现先运行该命令，再读取 Flutter 生成的 `bin/cache/flutter.version.json`。
+初始化失败仍立即退出，不会继续使用旧版本缓存。
+
+可用以下命令运行隔离回归检查（模拟 SDK 输出，不联网、不签名、不上传）：
+
+```bash
+python3 -m unittest discover -s scripts/tests -p 'test_xcode_cloud_post_clone.py' -v
+```
+
+检查覆盖带初始化日志的新 SDK、已有缓存的 SDK、版本不匹配、初始化失败时存在旧缓存，
+以及版本缓存损坏。实际云端归档和分发仍应以对应构建记录为准。
 
 ## 参考
 

@@ -33,7 +33,11 @@ export FLUTTER_SUPPRESS_ANALYTICS=true
 export COCOAPODS_DISABLE_STATS=true
 export HOMEBREW_NO_AUTO_UPDATE=1
 
-INSTALLED_VERSION="$(flutter --version --machine | python3 -c 'import json,sys; print(json.load(sys.stdin)["frameworkVersion"])')"
+# A fresh SDK can print bootstrap/download progress before the machine JSON.
+# Let Flutter initialize normally, then read its structured version cache.
+flutter --version --machine
+INSTALLED_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["frameworkVersion"])' \
+  "$FLUTTER_ROOT/bin/cache/flutter.version.json")"
 if [[ "$INSTALLED_VERSION" != "$FLUTTER_VERSION" ]]; then
   echo "error: Expected Flutter $FLUTTER_VERSION, found $INSTALLED_VERSION." >&2
   exit 1
